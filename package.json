@@ -10,6 +10,8 @@
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "migrate:prod": "tsx prisma/migrate-prod.ts",
+    "user:set": "tsx prisma/set-user.ts",
+    "user:set:prod": "tsx prisma/set-user.ts --prod",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -17,12 +19,15 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "next": "16.3.4",
+    "next-auth": "^5.0.0-beta.32",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.6.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

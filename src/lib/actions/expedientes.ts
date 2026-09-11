@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { REPARTO_DEFAULT } from "@/lib/domain";
+import { requireUser } from "@/lib/auth-guard";
 
 // ISO "YYYY-MM-DD" -> Date (UTC medianoche). "" / null -> null.
 function isoToDate(iso: string | null | undefined): Date | null {
@@ -21,6 +22,7 @@ function revalidateCore() {
 // ── Ediciones en línea (lista) ───────────────────────────────────────────────
 
 export async function setEstado(id: string, estado: string) {
+  await requireUser();
   await prisma.expediente.update({ where: { id }, data: { estado } });
   revalidatePath("/expedientes");
   revalidatePath(`/expedientes/${id}`);
@@ -28,6 +30,7 @@ export async function setEstado(id: string, estado: string) {
 }
 
 export async function toggleSeguro(id: string) {
+  await requireUser();
   const e = await prisma.expediente.findUnique({ where: { id }, select: { seguro: true } });
   if (!e) return;
   await prisma.expediente.update({ where: { id }, data: { seguro: !e.seguro } });
@@ -36,6 +39,7 @@ export async function toggleSeguro(id: string) {
 }
 
 export async function setPrioridad(id: string, prioridad: number | null) {
+  await requireUser();
   await prisma.expediente.update({ where: { id }, data: { prioridad } });
   revalidatePath("/expedientes");
   revalidatePath(`/expedientes/${id}`);
@@ -44,6 +48,7 @@ export async function setPrioridad(id: string, prioridad: number | null) {
 // ── Crear / descartar ────────────────────────────────────────────────────────
 
 export async function createExpediente(): Promise<string> {
+  await requireUser();
   const e = await prisma.expediente.create({
     data: { name: "", estado: "", prioridad: null, presupuesto: null, seguro: false },
   });
@@ -52,6 +57,7 @@ export async function createExpediente(): Promise<string> {
 }
 
 export async function deleteExpediente(id: string) {
+  await requireUser();
   await prisma.expediente.delete({ where: { id } });
   revalidateCore();
 }
@@ -91,12 +97,14 @@ export interface PatchExpedienteInput {
 
 /** Parche granular de un expediente (persistencia inmediata desde el detalle). */
 export async function patchExpediente(id: string, patch: PatchExpedienteInput) {
+  await requireUser();
   await prisma.expediente.update({ where: { id }, data: patch });
   revalidateCore();
   revalidatePath(`/expedientes/${id}`);
 }
 
 export async function saveExpediente(input: GuardarExpedienteInput) {
+  await requireUser();
   await prisma.expediente.update({
     where: { id: input.id },
     data: {
@@ -120,6 +128,7 @@ export async function saveExpediente(input: GuardarExpedienteInput) {
 // ── Pagos ────────────────────────────────────────────────────────────────────
 
 export async function addPago(expedienteId: string): Promise<string> {
+  await requireUser();
   const count = await prisma.pago.count({ where: { expedienteId } });
   const pago = await prisma.pago.create({
     data: {
@@ -148,6 +157,7 @@ export interface PagoPatch {
 }
 
 export async function updatePago(pagoId: string, patch: PagoPatch) {
+  await requireUser();
   const data: Record<string, unknown> = {};
   if (patch.importe !== undefined) data.importe = patch.importe;
   if (patch.fecha !== undefined) data.fecha = isoToDate(patch.fecha);
@@ -162,6 +172,7 @@ export async function updatePago(pagoId: string, patch: PagoPatch) {
 }
 
 export async function removePago(pagoId: string) {
+  await requireUser();
   const pago = await prisma.pago.delete({ where: { id: pagoId } });
   revalidatePath(`/expedientes/${pago.expedienteId}`);
   revalidateCore();
@@ -169,6 +180,7 @@ export async function removePago(pagoId: string) {
 
 /** Marca/desmarca cobrado. Al cobrar fija fecha (hoy si vacía), socio y reparto por defecto. */
 export async function toggleCobrado(pagoId: string) {
+  await requireUser();
   const pago = await prisma.pago.findUnique({ where: { id: pagoId } });
   if (!pago) return;
   if (pago.cobrado) {
@@ -197,6 +209,7 @@ export async function toggleCobrado(pagoId: string) {
 // ── Asociación de facturas ───────────────────────────────────────────────────
 
 export async function associateFactura(expedienteId: string, pagoId: string, facturaId: string) {
+  await requireUser();
   const f = await prisma.factura.findUnique({ where: { id: facturaId } });
   if (!f || f.expedienteId) return; // solo facturas sin asociar
   await prisma.factura.update({ where: { id: facturaId }, data: { expedienteId, pagoId } });
@@ -205,6 +218,7 @@ export async function associateFactura(expedienteId: string, pagoId: string, fac
 }
 
 export async function unlinkFactura(pagoId: string) {
+  await requireUser();
   const f = await prisma.factura.findUnique({ where: { pagoId } });
   const pago = await prisma.pago.findUnique({ where: { id: pagoId }, select: { expedienteId: true } });
   if (f) await prisma.factura.update({ where: { id: f.id }, data: { expedienteId: null, pagoId: null } });

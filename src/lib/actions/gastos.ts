@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { EntidadGasto } from "@/lib/domain";
+import { requireUser } from "@/lib/auth-guard";
 
 function isoToDate(iso: string): Date {
   const s = (iso || "").slice(0, 10);
@@ -22,6 +23,7 @@ export interface NuevoGasto {
 }
 
 export async function addGasto(input: NuevoGasto): Promise<string> {
+  await requireUser();
   const g = await prisma.gasto.create({
     data: {
       concepto: input.concepto.trim(),
@@ -46,6 +48,7 @@ export interface GastoPatch {
 }
 
 export async function updateGasto(id: string, patch: GastoPatch) {
+  await requireUser();
   const data: Record<string, unknown> = {};
   if (patch.concepto !== undefined) data.concepto = patch.concepto;
   if (patch.importe !== undefined) data.importe = patch.importe;
@@ -58,6 +61,7 @@ export async function updateGasto(id: string, patch: GastoPatch) {
 }
 
 export async function deleteGasto(id: string) {
+  await requireUser();
   await prisma.gasto.delete({ where: { id } });
   revalidate();
 }

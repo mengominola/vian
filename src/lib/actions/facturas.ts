@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { EstadoFactura, SocioKey } from "@/lib/domain";
+import { requireUser } from "@/lib/auth-guard";
 
 function isoToDate(iso: string): Date {
   const s = (iso || "").slice(0, 10);
@@ -11,6 +12,7 @@ function isoToDate(iso: string): Date {
 }
 
 export async function setFacturaEstado(id: string, estado: EstadoFactura) {
+  await requireUser();
   await prisma.factura.update({ where: { id }, data: { estado } });
   revalidatePath("/facturacion");
 }
@@ -36,6 +38,7 @@ export interface SaveFacturaResult {
 }
 
 export async function saveFactura(input: SaveFacturaInput): Promise<SaveFacturaResult> {
+  await requireUser();
   const numero = (input.numero || "").trim();
   const lineas = input.lineas
     .map((l) => ({ concepto: (l.concepto || "").trim(), base: Number(l.base) || 0 }))
@@ -102,6 +105,7 @@ export async function saveFactura(input: SaveFacturaInput): Promise<SaveFacturaR
 }
 
 export async function deleteFactura(id: string) {
+  await requireUser();
   await prisma.factura.delete({ where: { id } });
   revalidatePath("/facturacion");
   revalidatePath("/expedientes");

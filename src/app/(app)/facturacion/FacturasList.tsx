@@ -18,13 +18,13 @@ const ESTADO_META: Record<EstadoFactura, { label: string; fg: string; bg: string
   paid: { label: "Pagada", fg: "var(--ana)", bg: "rgba(92,191,152,0.16)" },
 };
 
-export default function FacturasList({ facturas }: { facturas: FacturaDTO[] }) {
+export default function FacturasList({ facturas, defaultSocio = "all" }: { facturas: FacturaDTO[]; defaultSocio?: string }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
   const [items, setItems] = useState<FacturaDTO[]>(facturas);
   const [year, setYear] = useState(2026);
-  const [socio, setSocio] = useState<string>("all");
+  const [socio, setSocio] = useState<string>(defaultSocio);
   const [estado, setEstado] = useState<string>("all");
   const [search, setSearch] = useState("");
 

@@ -148,6 +148,17 @@ model SocioConfig {
   updatedAt DateTime @updatedAt
 }
 
+// Usuarios de la app (los dos socios). Sin registro público.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  nombre       String
+  socio        String // 'ana' | 'jorge'
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 // Ajustes globales (fila única id="app").
 model AppSettings {
   id             String @id @default("app")

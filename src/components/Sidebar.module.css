@@ -80,6 +80,21 @@
   font-size: 10px;
   font-weight: 600;
 }
+.logout {
+  flex: none;
+  border: none;
+  background: transparent;
+  color: var(--mut2);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logout:hover {
+  color: var(--accent);
+}
+
 .userName {
   font-size: 11.5px;
   color: var(--text-b);

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./Sidebar.module.css";
 import ThemeToggle from "./ThemeToggle";
+import { logout } from "@/lib/actions/auth";
+import { socioColorVar, type SocioKey } from "@/lib/domain";
 
 const ICONS: Record<string, React.ReactNode> = {
   expedientes: <path d="M3 6.5h6l2 2.5h10v11H3z" />,
@@ -44,8 +46,14 @@ const NAV = [
   { href: "/ajustes", label: "Ajustes", icon: "ajustes" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ user }: { user: { name: string; socio: SocioKey } }) {
   const pathname = usePathname();
+  const initials = (user.name || "?")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("") || "?";
 
   return (
     <aside className={styles.aside}>
@@ -75,11 +83,16 @@ export default function Sidebar() {
       <div className={styles.bottom}>
         <ThemeToggle />
         <div className={styles.userRow}>
-          <div className={styles.avatar}>VN</div>
-          <div style={{ lineHeight: 1.25 }}>
-            <div className={styles.userName}>Estudio VIAN</div>
-            <div className={styles.userRole}>Ana · Jorge</div>
+          <div className={styles.avatar} style={{ color: socioColorVar(user.socio) }}>{initials}</div>
+          <div style={{ lineHeight: 1.25, flex: 1, minWidth: 0 }}>
+            <div className={styles.userName} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name || "—"}</div>
+            <div className={styles.userRole} style={{ color: socioColorVar(user.socio) }}>{user.socio === "ana" ? "Ana" : "Jorge"}</div>
           </div>
+          <form action={logout}>
+            <button type="submit" title="Cerrar sesión" className={styles.logout} aria-label="Cerrar sesión">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+            </button>
+          </form>
         </div>
       </div>
     </aside>
