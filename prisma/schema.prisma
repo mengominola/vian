@@ -1,0 +1,157 @@
+// VIAN — esquema de datos (PostgreSQL / Supabase).
+// Los "enums" se modelan como String validados en la app (socio, estado, entidad…)
+// y el cliente/líneas como columnas / tabla relacional. Se mantiene así por
+// simplicidad y para no churnar el esquema; PostgreSQL soporta ambos sin problema.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooler de Supabase (puerto 6543, ?pgbouncer=true)
+  directUrl = env("DIRECT_URL")   // conexión directa (puerto 5432) para migraciones
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Expediente — entidad central. Presupuesto dividido en pagos manuales.
+// ─────────────────────────────────────────────────────────────────────────────
+model Expediente {
+  id          String   @id @default(cuid())
+  name        String                       // SOLO MAYÚSCULAS (forzado en la app)
+  estado      String   @default("")        // nota de seguimiento libre; "Finalizado" => finalizado
+  prioridad   Int?                          // 1..5 | null
+  presupuesto Float?                        // importe con IVA | null
+  creado      DateTime @default(now())      // impulsa el filtro por año (UTC medianoche)
+  seguro      Boolean  @default(false)      // dado de alta en el seguro profesional
+
+  // Cliente (embebido como columnas para portabilidad y consulta)
+  clienteNombre    String @default("")
+  clienteDireccion String @default("")
+  clienteEmail     String @default("")
+  clienteTelefono  String @default("")
+  clienteDni       String @default("")
+  clienteNotas     String @default("")
+
+  pagos    Pago[]
+  facturas Factura[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pago — porción del presupuesto. `cobrado` es la puerta de estado clave:
+// socio/reparto/factura sólo existen una vez cobrado.
+// ─────────────────────────────────────────────────────────────────────────────
+model Pago {
+  id           String     @id @default(cuid())
+  expediente   Expediente @relation(fields: [expedienteId], references: [id], onDelete: Cascade)
+  expedienteId String
+  orden        Int        @default(0)   // preserva el orden (Pago 1, Pago 2, …)
+
+  importe    Float    @default(0)       // total, IVA incluido
+  cobrado    Boolean  @default(false)
+  fecha      DateTime?                   // se fija al marcar cobrado
+  facturaPor String?                     // 'socio1' (Ana) | 'socio2' (Jorge) | null
+  s1         Int      @default(0)        // % Ana
+  s2         Int      @default(0)        // % Jorge
+  emp        Int      @default(0)        // % Empresa
+
+  // Factura asociada (fuente de verdad del enlace en Factura.pagoId).
+  factura Factura? @relation("PagoFactura")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expedienteId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Factura — cada socio factura con su propia numeración (secuencia por socio).
+// ─────────────────────────────────────────────────────────────────────────────
+model Factura {
+  id     String   @id @default(cuid())
+  numero String                          // p. ej. "2026/001", editable
+  socio  String                          // 'ana' | 'jorge'
+  fecha  DateTime
+  estado String   @default("draft")      // 'draft' | 'pending' | 'paid'
+
+  expediente   Expediente? @relation(fields: [expedienteId], references: [id], onDelete: SetNull)
+  expedienteId String?
+  pago         Pago?       @relation("PagoFactura", fields: [pagoId], references: [id], onDelete: SetNull)
+  pagoId       String?     @unique
+
+  // Cliente (instantánea al emitir; independiente del expediente)
+  clienteNombre    String @default("")
+  clienteDireccion String @default("")
+  clienteEmail     String @default("")
+  clienteTelefono  String @default("")
+  clienteDni       String @default("")
+
+  lineas   FacturaLinea[]
+  ivaRate  Float @default(21)            // 0 = sin IVA
+  irpfRate Float @default(0)             // 0 = sin IRPF
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([socio])
+  @@index([expedienteId])
+}
+
+model FacturaLinea {
+  id        String  @id @default(cuid())
+  factura   Factura @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  facturaId String
+  concepto  String  @default("")
+  base      Float   @default(0)
+  orden     Int     @default(0)
+
+  @@index([facturaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gasto — alimenta el resultado mensual de contabilidad.
+// compensado | noComputable => excluido de contabilidad.
+// ─────────────────────────────────────────────────────────────────────────────
+model Gasto {
+  id           String   @id @default(cuid())
+  concepto     String   @default("")
+  importe      Float    @default(0)
+  fecha        DateTime
+  entidad      String   @default("empresa")  // 'empresa' | 'socio1' | 'socio2'
+  compensado   Boolean  @default(false)
+  noComputable Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ajustes — datos de emisor por socio + numeración por socio (server-side).
+// ─────────────────────────────────────────────────────────────────────────────
+model SocioConfig {
+  socio     String @id                  // 'ana' | 'jorge'
+  nombre    String
+  nif       String @default("")
+  direccion String @default("")
+  cp        String @default("")
+  email     String @default("")
+  iban      String @default("") // en desuso: el IBAN es global (AppSettings.iban)
+
+  // Numeración de factura por socio (overridable en Ajustes).
+  facturaSerie   String @default("2026/") // prefijo/serie
+  facturaAncho   Int    @default(3)       // dígitos de relleno (001)
+  proximoNumero  Int    @default(1)       // siguiente correlativo
+
+  updatedAt DateTime @updatedAt
+}
+
+// Ajustes globales (fila única id="app").
+model AppSettings {
+  id             String @id @default("app")
+  formaPagoTexto String @default("Transferencia bancaria al número de cuenta de ARQUIA")
+  iban           String @default("") // cuenta común: todas las facturas cobran aquí
+  updatedAt      DateTime @updatedAt
+}

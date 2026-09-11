@@ -1,0 +1,165 @@
+/* ============================================================================
+   VIAN — sistema de diseño (tokens + base).
+   Lenguaje visual deliberado: sin esquinas redondeadas, sin chips/pills, sin
+   bordes de tarjeta, sin sombras ni degradados. Estructura = separadores 1px +
+   rellenos sólidos. Sans-serif (Helvetica Neue). Cifras con tabular-nums.
+   ============================================================================ */
+
+:root {
+  --bg: #1b1b1b; --deep: #141414; --field: #0d0d0d; --panel: #1e1e1e; --hover: #232323;
+  --bar: #242424; --line: #262626; --line2: #212121; --boxrow: #1a1a1a; --boxemp: #1f1f1f;
+  --hover2: #202020; --hdropen: #2e2e2e; --fline: #2f2f2f; --border: #2b2b2b; --border2: #333;
+  --scroll: #3a3a3a; --rosebg: #1a1113; --text: #ececec; --text-b: #e6e6e6; --text2: #c9c9c9;
+  --text2b: #cfcfcf; --text3: #a5a5a5; --text3b: #9a9a9a; --mut: #8a8a8a; --mut2: #7a7a7a;
+  --mut3: #6f6f6f; --mut4: #6a6a6a; --mut5: #666; --mut6: #555; --mut7: #777; --mut8: #999;
+  --mut9: #aaa; --mut10: #4a4a4a;
+
+  /* Colores fijos (idénticos en ambos temas) */
+  --accent: #e85567;
+  --accent-hover: #f07785;
+  --ana: #5cbf98; --jorge: #6ea0e0;
+  --ana-bg: rgba(92, 191, 152, 0.10); --jorge-bg: rgba(110, 160, 224, 0.10);
+}
+
+:root[data-theme="light"] {
+  --bg: #c5c8ca; --deep: #b7bbbd; --field: #ccd0d2; --panel: #bdc1c3; --hover: #cbcfd1;
+  --bar: #b0b4b6; --line: #b4b8ba; --line2: #b6babc; --boxrow: #c3c7c9; --boxemp: #c3c7c9;
+  --hover2: #cbcfd1; --hdropen: #aeb2b4; --fline: #a9adaf; --border: #a9adaf; --border2: #a2a6a8;
+  --scroll: #9a9ea0; --rosebg: #ecdcde; --text: #1d1e20; --text-b: #1d1e20; --text2: #3a3d3f;
+  --text2b: #3a3d3f; --text3: #4a4e50; --text3b: #54585a; --mut: #5e6264; --mut2: #63676a;
+  --mut3: #7a7e80; --mut4: #83878a; --mut5: #83878a; --mut6: #6c7072; --mut7: #7d8183;
+  --mut8: #83878a; --mut9: #8a8e90; --mut10: #7d8183;
+
+  /* Colores de socio oscurecidos para contraste sobre plata; tintes reforzados */
+  --ana: #2f8f68; --jorge: #3768ad;
+  --ana-bg: rgba(47, 143, 104, 0.20); --jorge-bg: rgba(55, 104, 173, 0.20);
+}
+
+/* El color de texto heredado se fija por regla (no inline) — evita var() mal resuelto. */
+:root { color: var(--text); }
+
+/* La hoja de factura SIEMPRE en negro sobre blanco: re-declara los tokens oscuros
+   independientemente del tema de la app. */
+#factura-sheet {
+  --bg: #1b1b1b; --deep: #141414; --field: #0d0d0d; --panel: #1e1e1e; --hover: #232323;
+  --bar: #242424; --line: #262626; --line2: #212121; --boxrow: #1a1a1a; --boxemp: #1f1f1f;
+  --hover2: #202020; --hdropen: #2e2e2e; --fline: #2f2f2f; --border: #2b2b2b; --border2: #333;
+  --scroll: #3a3a3a; --rosebg: #1a1113; --text: #ececec; --text-b: #e6e6e6; --text2: #c9c9c9;
+  --text2b: #cfcfcf; --text3: #a5a5a5; --text3b: #9a9a9a; --mut: #8a8a8a; --mut2: #7a7a7a;
+  --mut3: #6f6f6f; --mut4: #6a6a6a; --mut5: #666; --mut6: #555; --mut7: #777; --mut8: #999;
+  --mut9: #aaa; --mut10: #4a4a4a;
+  /* Imprime los fondos (franja magenta, etc.) exactamente como se ven */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* Cifras tabulares (NO monospace) */
+.num { font-variant-numeric: tabular-nums; }
+/* Los importes nunca parten el € a otra línea */
+.nowrap { white-space: nowrap; }
+
+input, select { font-family: inherit; }
+input::placeholder { color: var(--mut3); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+/* Scroll: 6px, sin flechas, pulgar redondeado (único radio permitido en la app) */
+.tablescroll { scrollbar-width: thin; scrollbar-color: var(--scroll) transparent; }
+.tablescroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.tablescroll::-webkit-scrollbar-track { background: transparent; }
+.tablescroll::-webkit-scrollbar-thumb { background: var(--scroll); border-radius: 3px; }
+.tablescroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+
+/* Inputs numéricos sin spinners */
+.flatnum::-webkit-inner-spin-button, .flatnum::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.flatnum { -moz-appearance: textfield; }
+
+/* Selects completamente planos: sin borde, sin caja nativa */
+.flatselect { appearance: none; -webkit-appearance: none; cursor: pointer; }
+select { appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; }
+option { background: var(--panel); }
+option:checked { font-weight: 700; }
+select:focus, .flatselect:focus { outline: none; }
+
+/* Campo editable (recuadro) */
+.editfield { border: none; background: var(--field); color: var(--text); padding: 8px 10px; }
+.editfield:hover { background: var(--deep); }
+.editfield:focus { outline: none; background: var(--rosebg); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.editfield::placeholder { color: var(--mut3); }
+
+/* Campo tipo gasto (mismo look que editfield pero heredando tipografía) */
+.gfield { border: none; background: var(--field); color: var(--text); font-family: inherit; }
+.gfield:hover { background: var(--deep); }
+.gfield:focus { outline: none; background: var(--rosebg); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.gfield::placeholder { color: var(--mut3); }
+
+/* Campo "grow" transparente (filas de gasto) — sin caja visible */
+.grow { border: none; background: transparent; color: var(--text); font-family: inherit; }
+.grow:hover { background: rgba(255, 255, 255, 0.03); }
+.grow:focus { outline: none; background: var(--rosebg); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.grow::placeholder { color: var(--mut3); }
+:root[data-theme="light"] .grow:hover { background: rgba(0, 0, 0, 0.04); }
+
+/* valbox: un único elemento en vista y edición; solo cambia el fondo */
+.valbox { border: none; background: transparent; color: var(--text); font-family: inherit; }
+.valbox:focus { outline: none; }
+.valbox.edit { background: var(--field); }
+.valbox.edit:hover { background: var(--deep); }
+.valbox.edit:focus { background: var(--rosebg); box-shadow: inset 0 0 0 1.5px var(--accent); }
+
+/* Campo cliente subrayado */
+.fieldline { border: none; border-bottom: 1px solid var(--fline); background: transparent; color: var(--text3b); padding: 4px 2px; }
+.fieldline:focus { outline: none; border-bottom-color: var(--mut4); }
+.fieldline::placeholder { color: var(--mut3); }
+
+/* Nota de estado editable en la lista de expedientes */
+.estado-input { border: none; background: transparent; outline: none; }
+.estado-input:focus { background: var(--hover); }
+.estado-input:hover { background: var(--hover2); }
+
+/* Botón fantasma */
+.ghostbtn { border: none; cursor: pointer; }
+.ghostbtn:hover { filter: brightness(1.12); }
+
+/* Hover de fila */
+.rowh:hover { background: var(--hover) !important; }
+
+/* Date picker según tema */
+input[type="date"] { color-scheme: dark; }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+:root[data-theme="light"] input[type="date"] { color-scheme: light; }
+:root[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+
+/* Impresión: solo la hoja de factura, a sangre A4, idéntica a la vista previa.
+   Se neutralizan alturas/overflow de los contenedores de la app (que si no,
+   recortan o descuadran la hoja) y se fuerza la impresión de fondos. */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { height: auto !important; background: #fff !important; }
+  /* Ningún ancestro debe recortar la hoja posicionada en absoluto */
+  html, body, body * { overflow: visible !important; }
+  /* Oculta todo el chrome de la app, deja solo la hoja */
+  body * { visibility: hidden !important; }
+  #factura-sheet, #factura-sheet * { visibility: visible !important; }
+  #factura-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    margin: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
