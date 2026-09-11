@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VIAN
 
-## Getting Started
+App interna de contabilidad y expedientes del estudio VIAN (Ana y Jorge).
+Next.js 16 (App Router) · TypeScript · Prisma · PostgreSQL (Supabase) · CSS Modules.
 
-First, run the development server:
+## Desarrollo local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requiere un `.env` con la conexión a la BD de **desarrollo** (Supabase `vian-dev`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+DATABASE_URL="postgresql://postgres.<ref>:<pwd>@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.<ref>:<pwd>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ver `.env.example`. Regla de oro: **`DATABASE_URL` = puerto 6543** (`?pgbouncer=true`, lo usa la app);
+**`DIRECT_URL` = puerto 5432** (lo usan las migraciones). Nunca migrar por el 6543.
 
-## Learn More
+## Base de datos
 
-To learn more about Next.js, take a look at the following resources:
+- **Esquema**: `prisma/schema.prisma`. Datos de muestra: `prisma/seed.ts`.
+- Crear/editar migración en dev: `npx prisma migrate dev --name <nombre>`.
+- Sembrar dev con datos de muestra: `npm run seed`.
+- Reset completo de dev (destructivo): `npm run db:reset`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Entornos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Entorno | Proyecto Supabase | Datos |
+|---|---|---|
+| Desarrollo (local) | `vian-dev` (eu-central-1) | datos de muestra (`npm run seed`) |
+| Producción (Vercel) | `vian-prod` (eu-west-1) | datos reales; **sin** seed |
 
-## Deploy on Vercel
+## Despliegue (Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Vercel está conectado al repo `mengominola/vian` (rama `main`): cada push despliega.
+- Build: `prisma generate && next build`. **El build NO aplica migraciones** (para no
+  depender de la BD ni colgarse en el pooler).
+- Variables de entorno en Vercel: `DATABASE_URL` (6543) y `DIRECT_URL` (5432) de **prod**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Aplicar migraciones a producción
+
+Cuando cambies el esquema y la migración esté en `main`:
+
+1. Crea `vian/.env.prod` (ignorado por git) con `DATABASE_URL` y `DIRECT_URL` de **vian-prod**.
+2. Ejecuta:
+
+   ```bash
+   npm run migrate:prod
+   ```
+
+   Aplica las migraciones pendientes por `DIRECT_URL` (5432). Es idempotente.
+
+## Pendiente
+
+- Autenticación (Ana / Jorge); la lista de facturas por defecto al socio conectado.
+- Carga de datos reales de proyectos (desde Excel) en producción.
