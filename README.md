@@ -29,12 +29,12 @@ Ver `.env.example`. Regla de oro: **`DATABASE_URL` = puerto 6543** (`?pgbouncer=
 
 ## Entornos
 
-Entorno único de **producción**: Supabase `vian-prod` (eu-west-1) desplegado en
-Vercel. El proyecto de desarrollo `vian-dev` fue retirado.
+| Entorno | Proyecto Supabase | Uso |
+|---|---|---|
+| Desarrollo / sandbox (local) | `vian-dev` (eu-central-1) | pruebas locales; `.env` + `npm run seed` |
+| Producción (Vercel) | `vian-prod` (eu-west-1) | datos reales; dominio `gestion.vianestudio.com` |
 
-Para pruebas locales puntuales, crea un proyecto Supabase temporal, pon sus
-cadenas en `.env` y opcionalmente `npm run seed` (datos de muestra) — nunca
-apuntes el `.env` local a producción.
+Nunca apuntes el `.env` local a producción; usa `vian-dev` para probar.
 
 ## Despliegue (Vercel)
 
