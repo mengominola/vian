@@ -12,6 +12,8 @@
     "migrate:prod": "tsx prisma/migrate-prod.ts",
     "user:set": "tsx prisma/set-user.ts",
     "user:set:prod": "tsx prisma/set-user.ts --prod",
+    "import:data": "tsx prisma/import-json.ts",
+    "import:data:prod": "tsx prisma/import-json.ts --prod",
     "postinstall": "prisma generate"
   },
   "prisma": {
