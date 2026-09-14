@@ -62,24 +62,7 @@ export async function deleteExpediente(id: string) {
   revalidateCore();
 }
 
-// ── Guardar detalle (al pulsar Listo / Crear) ────────────────────────────────
-
-export interface GuardarExpedienteInput {
-  id: string;
-  name: string;
-  estado: string;
-  prioridad: number | null;
-  presupuesto: number | null;
-  seguro: boolean;
-  cliente: {
-    nombre: string;
-    direccion: string;
-    email: string;
-    telefono: string;
-    dni: string;
-    notas: string;
-  };
-}
+// ── Editar detalle (persistencia inmediata) ──────────────────────────────────
 
 export interface PatchExpedienteInput {
   name?: string;
@@ -101,28 +84,6 @@ export async function patchExpediente(id: string, patch: PatchExpedienteInput) {
   await prisma.expediente.update({ where: { id }, data: patch });
   revalidateCore();
   revalidatePath(`/expedientes/${id}`);
-}
-
-export async function saveExpediente(input: GuardarExpedienteInput) {
-  await requireUser();
-  await prisma.expediente.update({
-    where: { id: input.id },
-    data: {
-      name: input.name,
-      estado: input.estado,
-      prioridad: input.prioridad,
-      presupuesto: input.presupuesto,
-      seguro: input.seguro,
-      clienteNombre: input.cliente.nombre,
-      clienteDireccion: input.cliente.direccion,
-      clienteEmail: input.cliente.email,
-      clienteTelefono: input.cliente.telefono,
-      clienteDni: input.cliente.dni,
-      clienteNotas: input.cliente.notas,
-    },
-  });
-  revalidateCore();
-  revalidatePath(`/expedientes/${input.id}`);
 }
 
 // ── Pagos ────────────────────────────────────────────────────────────────────

@@ -29,10 +29,12 @@ Ver `.env.example`. Regla de oro: **`DATABASE_URL` = puerto 6543** (`?pgbouncer=
 
 ## Entornos
 
-| Entorno | Proyecto Supabase | Datos |
-|---|---|---|
-| Desarrollo (local) | `vian-dev` (eu-central-1) | datos de muestra (`npm run seed`) |
-| Producción (Vercel) | `vian-prod` (eu-west-1) | datos reales; **sin** seed |
+Entorno único de **producción**: Supabase `vian-prod` (eu-west-1) desplegado en
+Vercel. El proyecto de desarrollo `vian-dev` fue retirado.
+
+Para pruebas locales puntuales, crea un proyecto Supabase temporal, pon sus
+cadenas en `.env` y opcionalmente `npm run seed` (datos de muestra) — nunca
+apuntes el `.env` local a producción.
 
 ## Despliegue (Vercel)
 
@@ -54,7 +56,8 @@ Cuando cambies el esquema y la migración esté en `main`:
 
    Aplica las migraciones pendientes por `DIRECT_URL` (5432). Es idempotente.
 
-## Pendiente
+## Estado
 
-- Autenticación (Ana / Jorge); la lista de facturas por defecto al socio conectado.
-- Carga de datos reales de proyectos (desde Excel) en producción.
+Hecho: modelo de datos, las 5 pantallas + hoja A4, migración a Supabase/Vercel,
+autenticación (Ana/Jorge) y carga de datos reales en producción. Presupuestos
+(quotes): descartado.
